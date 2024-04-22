@@ -26,3 +26,16 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('bootBuildImage') {
+    def dockerUsername = System.getenv("DOCKER_USERNAME")
+    def dockerPassword = System.getenv("DOCKER_PASSWORD")
+    imageName = dockerUsername + "/${project.name}:${project.version}"
+    publish = true
+    docker {
+        publishRegistry {
+            username = dockerUsername
+            password = dockerPassword
+        }
+    }
+}
