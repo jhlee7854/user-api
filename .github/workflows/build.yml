@@ -37,4 +37,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: jonghak/${GITHUB_REPOSITORY#*/}:${{ steps.get-gradle-project-version.outputs.PROJECT_VERSION }}
+          tags: jonghak/${{ github.event.repository.name }}:${{ steps.get-gradle-project-version.outputs.PROJECT_VERSION }}
