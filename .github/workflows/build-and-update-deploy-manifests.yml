@@ -43,8 +43,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: infra
-    env:
-      PROJECT_VERSION: ${{ needs.build.outputs.PROJECT_VERSION }}
     steps:
       - name: Deploy Manifests Source Checkout
         uses: actions/checkout@v4
@@ -54,12 +52,14 @@ jobs:
           path: ${{ github.repository }}-deploy
           token: '${{ secrets.REPO_SECRET }}'
       - name: Set New Image Tag
+        env:
+          PROJECT_VERSION: ${{ needs.build.outputs.PROJECT_VERSION }}
         run: |
           cd ${{ github.repository }}-deploy
           APP_VERSION="${PROJECT_VERSION//./}"
-          sed -i 's/ nameSuffix:.*/ nameSuffix: "$APP_VERSION"/g' kustomize/base/kustomization.yaml
-          sed -i 's/ app.kubernetes.io\/version:.*/ app.kubernetes.io\/version: "$APP_VERSION"/g' kustomize/base/kustomization.yaml
-          sed -i 's/ newTag:.*/ newTag: "$PROJECT_VERSION"/g' kustomize/base/kustomization.yaml
+          sed -i 's/ nameSuffix:.*/ nameSuffix: "${APP_VERSION}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/ app.kubernetes.io\/version:.*/ app.kubernetes.io\/version: "${APP_VERSION}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/ newTag:.*/ newTag: "${PROJECT_VERSION}"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
         run: |
           cd ${{ github.repository }}-deploy
