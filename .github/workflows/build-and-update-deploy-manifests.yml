@@ -52,6 +52,7 @@ jobs:
           repository: ${{ github.repository }}-deploy
           ref: main
           path: ${{ github.repository }}-deploy
+          token: '${{ secrets.REPO_SECRET }}'
       - name: Set New Image Tag
         run: |
           cd ${{ github.repository }}-deploy
