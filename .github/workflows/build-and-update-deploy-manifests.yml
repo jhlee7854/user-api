@@ -49,19 +49,19 @@ jobs:
       - name: Deploy Manifests Source Checkout
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.repository.name }}-deploy
+          repository: ${{ github.repository }}-deploy
           ref: main
-          path: ${{ github.event.repository.name }}-deploy
+          path: ${{ github.repository }}-deploy
       - name: Set New Image Tag
         run: |
-          cd ${{ github.event.repository.name }}-deploy
+          cd ${{ github.repository }}-deploy
           APP_VERSION="${PROJECT_VERSION//./}"
           sed -i 's/ nameSuffix:.*/ nameSuffix: "$APP_VERSION"/g' kustomize/base/kustomization.yaml
           sed -i 's/ app.kubernetes.io\/version:.*/ app.kubernetes.io\/version: "$APP_VERSION"/g' kustomize/base/kustomization.yaml
           sed -i 's/ newTag:.*/ newTag: "$PROJECT_VERSION"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
         run: |
-          cd ${{ github.event.repository.name }}-deploy
+          cd ${{ github.repository }}-deploy
           git config --global user.name ${{ github.event.pusher.name || 'jonghak' }}
           git config --global user.email ${{ github.event.pusher.email || 'jhlee7854@gmail.com' }}
           git add .
