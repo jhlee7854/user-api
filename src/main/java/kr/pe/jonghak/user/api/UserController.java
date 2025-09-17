@@ -27,14 +27,14 @@ public class UserController {
     @GetMapping("/users")
     public ResponseEntity<List<String>> users() {
         List<String> users = userRepository.findAll().stream().map(User::getName).toList();
-        log.info("response user list(v0.0.5): {}", users);
+        log.info("response user list(v0.0.6): {}", users);
         return ResponseEntity.ok(users);
     }
 
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User savedUser = userRepository.save(user);
-        log.info("saved user(v0.0.5): {}", savedUser.getName());
+        log.info("saved user(v0.0.6): {}", savedUser.getName());
         String key = "created";
         String value = savedUser.getEmail();
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(TOPIC, key, value);

@@ -63,6 +63,7 @@ jobs:
           cd ${{ github.repository }}-deploy
           sed -i 's/nameSuffix:.*/nameSuffix: "-${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/app.kubernetes.io\/version:.*/app.kubernetes.io\/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/version:.*/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/newTag:.*/newTag: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
         run: |
