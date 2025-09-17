@@ -57,7 +57,7 @@ jobs:
           token: '${{ secrets.REPO_SECRET }}'
       - name: Set App Version
         run: |
-          echo 'APP_VERSION=$(echo "${{ env.PROJECT_VERSION }}" | sed "s/\.//g")' >> $GITHUB_ENV
+          echo "APP_VERSION=$(echo '${{ env.PROJECT_VERSION }}' | sed 's/\.//g')" >> $GITHUB_ENV
       - name: Update Version in Deploy Manifest
         run: |
           cd ${{ github.repository }}-deploy
