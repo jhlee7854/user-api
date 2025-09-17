@@ -11,7 +11,7 @@ jobs:
     outputs:
       project-version: ${{ steps.set-project-version.outputs.PROJECT_VERSION }}
     steps:
-      - name: Checkout project sources
+      - name: Checkout Project Sources
         uses: actions/checkout@v4
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -22,7 +22,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run build with Gradle Wrapper
         run: ./gradlew test build
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -45,6 +45,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: infra
+    env:
+      PROJECT_VERSION: ${{ needs.build.outputs.project-version }}
     steps:
       - name: Deploy Manifests Source Checkout
         uses: actions/checkout@v4
@@ -53,16 +55,15 @@ jobs:
           ref: main
           path: ${{ github.repository }}-deploy
           token: '${{ secrets.REPO_SECRET }}'
-      - name: Set New Image Tag
-        env:
-          PROJECT_VERSION: ${{ needs.build.outputs.project-version }}
+      - name: Set App Version
+        run: |
+          echo "${{ env.PROJECT_VERSION }}" | sed "s/\.//g" >> $GITHUB_ENV
+      - name: Update Version in Deploy Manifest
         run: |
           cd ${{ github.repository }}-deploy
-          APP_VERSION="${PROJECT_VERSION//./}"
-
-          sed -i 's/ nameSuffix:.*/ nameSuffix: "-${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
-          sed -i 's/ app.kubernetes.io\/version:.*/ app.kubernetes.io\/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
-          sed -i 's/ newTag:.*/ newTag: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/nameSuffix:.*/nameSuffix: "-${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/app.kubernetes.io\/version:.*/app.kubernetes.io\/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/newTag:.*/newTag: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
         run: |
           cd ${{ github.repository }}-deploy
