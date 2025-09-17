@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.set-project-version.outputs.PROJECT_VERSION }}
+      project-version: ${{ steps.set-project-version.outputs.PROJECT_VERSION }}
     steps:
       - name: Checkout project sources
         uses: actions/checkout@v4
@@ -55,11 +55,12 @@ jobs:
           token: '${{ secrets.REPO_SECRET }}'
       - name: Set New Image Tag
         env:
-          PROJECT_VERSION: ${{ needs.build.outputs.PROJECT_VERSION }}
+          PROJECT_VERSION: ${{ needs.build.outputs.project-version }}
         run: |
           cd ${{ github.repository }}-deploy
           APP_VERSION="${PROJECT_VERSION//./}"
-          sed -i 's/ nameSuffix:.*/ nameSuffix: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
+
+          sed -i 's/ nameSuffix:.*/ nameSuffix: "-${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/ app.kubernetes.io\/version:.*/ app.kubernetes.io\/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/ newTag:.*/ newTag: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
