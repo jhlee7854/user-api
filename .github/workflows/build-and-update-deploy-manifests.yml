@@ -1,4 +1,4 @@
-name: Build and Update Infra Env. Deploy Manifests
+name: Build and Update Deploy Manifests
 
 on:
   push:
@@ -22,6 +22,23 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run build with Gradle Wrapper
         run: ./gradlew test build
+      - name: Upload Test Reports
+        if: failure() # Only upload if the previous step (build/test) failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/problems/
+            **/build/reports/tests/
+            **/build/test-results/
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            **/build/reports/
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -44,7 +61,6 @@ jobs:
   update-deploy-manifests:
     needs: build
     runs-on: ubuntu-latest
-    environment: infra
     env:
       PROJECT_VERSION: ${{ needs.build.outputs.project-version }}
     steps:
@@ -57,13 +73,15 @@ jobs:
           token: '${{ secrets.REPO_SECRET }}'
       - name: Set App Version
         run: |
-          echo "APP_VERSION=$(echo '${{ env.PROJECT_VERSION }}' | sed 's/\.//g')" >> $GITHUB_ENV
+          cd ${{ github.repository }}-deploy
+          CURRENT_VERSION=$(grep "nameSuffix:" kustomize/base/kustomization.yaml | grep -o "[0-9]*")
+          echo "APP_VERSION=v$((CURRENT_VERSION+1))" >> $GITHUB_ENV
       - name: Update Version in Deploy Manifest
         run: |
           cd ${{ github.repository }}-deploy
           sed -i 's/nameSuffix:.*/nameSuffix: "-${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
-          sed -i 's/app.kubernetes.io\/version:.*/app.kubernetes.io\/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/version:.*/version: "${{ env.APP_VERSION }}"/g' kustomize/base/kustomization.yaml
+          sed -i 's/app.kubernetes.io\/version:.*/app.kubernetes.io\/version: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
           sed -i 's/newTag:.*/newTag: "${{ env.PROJECT_VERSION }}"/g' kustomize/base/kustomization.yaml
       - name: Commit and Push Manifests
         run: |
@@ -71,5 +89,5 @@ jobs:
           git config --global user.name ${{ github.event.pusher.name || 'jonghak' }}
           git config --global user.email ${{ github.event.pusher.email || 'jhlee7854@gmail.com' }}
           git add .
-          git commit -m "Set new image tag $PROJECT_VERSION on ${{ github.environment }} environment"
+          git commit -m "Set new image tag $PROJECT_VERSION"
           git push
