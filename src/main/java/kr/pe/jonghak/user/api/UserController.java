@@ -26,8 +26,8 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<List<String>> users() {
-        List<String> users = userRepository.findAll().stream().map(User::getName).toList();
-        log.info("response user list(v0.0.6): {}", users);
+        List<String> users = userRepository.findAll().stream().map(User::getName).map(s -> s+"-v7").toList();
+        log.info("response user list(v0.0.7): {}", users);
         return ResponseEntity.ok(users);
     }
 
