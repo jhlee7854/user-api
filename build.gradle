@@ -6,10 +6,14 @@ plugins {
 }
 
 group = 'kr.pe.jonghak'
-version = '0.0.7'
+version = '0.0.8'
 
 java {
-    sourceCompatibility = '17'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
 }
 
 repositories {
